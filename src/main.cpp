@@ -6,9 +6,9 @@
 
 int main()
 {
-    const int screenWidth = 800;
-    const int screenHeight = 450;
-    InitWindow(screenWidth, screenHeight, "Niggas in paris");
+    const int screenWidth = 1500;
+    const int screenHeight = 750;
+    InitWindow(screenWidth, screenHeight, "Simulator");
 
     Vector2 spawnpos = {0};
     Vector2 endpos = {0};
@@ -16,6 +16,7 @@ int main()
     bool gotmousepos = false;
 
     std::vector<Body> bodies;
+    std::vector<Color> colors = {BLUE,RED,PURPLE,GREEN,YELLOW,PINK};
 
     SetTargetFPS(60);
 
@@ -44,13 +45,13 @@ int main()
             newBody.position = spawnpos;
             newBody.velocity = initialVelocity;
             std::cout << "init vel : " << initialVelocity.x << " " << initialVelocity.y << std::endl;
-            newBody.color = MAROON;
-            newBody.radius = 50.0f;
+            newBody.color = newBody.generateRandomColor(colors);
+            newBody.radius = newBody.generateRandomRadius();
             bodies.push_back(newBody);
         }
 
         // Update and draw all bodies
-        if(bodies.size() > 2)
+        if(bodies.size() >= 2)
         {
             for(int i = 0; i < bodies.size() - 1; i++)
             {

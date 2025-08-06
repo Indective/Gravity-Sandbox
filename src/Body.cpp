@@ -3,6 +3,7 @@
 #include "Body.hpp"
 #include <iostream>
 #include <cmath>
+#include <random>
 
 void Body::Draw()
 {
@@ -12,6 +13,27 @@ void Body::Draw()
 void Body::Update()
 {
     position = Vector2Add(position, velocity);
+}
+
+int Body::generateRandomRadius()
+{
+    std::random_device rd; 
+    std::mt19937 gen(rd()); 
+    std::uniform_int_distribution<> distrib(10, 180);
+    int rand = distrib(gen);
+
+    return rand;
+}
+
+Color Body::generateRandomColor(const std::vector<Color> colors)
+{
+    std::random_device rd_device; 
+    std::mt19937 gen(rd_device()); 
+    std::cout << colors.size();
+    std::uniform_int_distribution<> distrib(1, colors.size() - 1);
+    int rand = distrib(gen);
+
+    return colors.at(rand);
 }
 
 Vector2 Body::GetAccelerationFrom(const Body &bodyB)
