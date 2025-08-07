@@ -25,6 +25,11 @@ int Body::generateRandomMass()
     return rand;
 }
 
+float Body::computeEnergy()
+{
+    return (0.5 * mass * Vector2LengthSqr(velocity));
+}
+
 Color Body::generateRandomColor(const std::vector<Color> colors)
 {
     std::random_device rd_device; 
@@ -39,7 +44,7 @@ Color Body::generateRandomColor(const std::vector<Color> colors)
 Vector2 Body::GetAccelerationFrom(const Body &bodyB)
 {
     Vector2 dir = Vector2Subtract(bodyB.position, position);
-    float r2 = Vector2LengthSqr(dir);
+    float r2 = Vector2LengthSqr(dir) + epsilon * epsilon;
     Vector2 dirNorm = Vector2Normalize(dir);
     float forceMag = (G * mass * bodyB.mass) / r2;
     Vector2 force = Vector2Scale(dirNorm, forceMag);

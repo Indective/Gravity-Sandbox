@@ -14,6 +14,8 @@ int main()
     Vector2 endpos = {0};
     float velocityfactor = 0.1f;
     bool gotmousepos = false;
+    float totalKE = 0.0f;
+    float totalPE = 0.0f;
 
     std::vector<Body> bodies;
     std::vector<Color> colors = {BLUE,RED,PURPLE,GREEN,YELLOW,PINK};
@@ -57,11 +59,15 @@ int main()
         {
             for (int i = 0; i < bodies.size(); i++) 
             {
+                totalKE += 0.5f * bodies[i].mass * Vector2LengthSqr(bodies[i].velocity);
                 for (int j = 0; j < bodies.size(); j++) 
                 {
                     if (i == j) continue; // skip self
                     Vector2 acc = bodies[i].GetAccelerationFrom(bodies[j]);
                     bodies[i].velocity = Vector2Add(bodies[i].velocity, acc);
+                    std::cout << bodies[i].computeEnergy() << std::endl;
+                    float dist = Vector2Distance(bodies[i].position, bodies[j].position);
+                    totalPE += -bodies[i].G * bodies[i].mass * bodies[j].mass / dist;
                 }
             }
         }
@@ -72,7 +78,8 @@ int main()
             b.Draw();
         }
 
-
+        DrawText(TextFormat("FPS: %i", GetFPS()), 10, 10, 20, DARKGRAY);
+        DrawText(TextFormat("Energy: KE=%.2f PE=%.2f", totalKE, totalPE), 10, 50, 20, DARKGRAY);
         EndDrawing();
     }
 
