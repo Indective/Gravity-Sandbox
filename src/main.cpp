@@ -1,3 +1,4 @@
+// main.cpp
 #include "raylib.h"
 #include "raymath.h"
 #include "Body.hpp"
@@ -18,68 +19,71 @@ int main()
     float totalPE = 0.0f;
 
     std::vector<Body> bodies;
-    std::vector<Color> colors = {BLUE,RED,PURPLE,GREEN,YELLOW,PINK};
+    std::vector<Color> colors = {BLUE, RED, PURPLE, GREEN, YELLOW, PINK};
 
     SetTargetFPS(60);
 
-    while(!WindowShouldClose())
+    while (!WindowShouldClose())
     {
+        float dt = GetFrameTime();
+        totalKE = 0.0f;
+        totalPE = 0.0f;
+
         BeginDrawing();
         ClearBackground(RAYWHITE);
+        DrawText(TextFormat("FPS: %i", GetFPS()), 10, 10, 20, DARKGRAY);
+        DrawText(TextFormat("Energy: KE=%.2f PE=%.2f", totalKE, totalPE), 10, 50, 20, DARKGRAY);
 
-        if(IsMouseButtonPressed(MOUSE_LEFT_BUTTON)) {
+        if (IsMouseButtonPressed(MOUSE_LEFT_BUTTON)) {
             spawnpos = GetMousePosition();
             gotmousepos = true;
         }
 
-        if(IsMouseButtonDown(MOUSE_LEFT_BUTTON) && gotmousepos) {
+        if (IsMouseButtonDown(MOUSE_LEFT_BUTTON) && gotmousepos) {
             endpos = GetMousePosition();
             DrawLineV(spawnpos, endpos, BLACK);
         }
 
-        if(IsMouseButtonReleased(MOUSE_LEFT_BUTTON) && gotmousepos) {
+        if (IsMouseButtonReleased(MOUSE_LEFT_BUTTON) && gotmousepos) {
             gotmousepos = false;
             Vector2 dragvector = Vector2Subtract(endpos, spawnpos);
             Vector2 initialVelocity = Vector2Scale(dragvector, velocityfactor);
 
-            // Spawn a new body with position and velocity
             Body newBody;
             newBody.position = spawnpos;
             newBody.velocity = initialVelocity;
-            std::cout << "init vel : " << initialVelocity.x << " " << initialVelocity.y << std::endl;
+            newBody.prevPosition = Vector2Subtract(spawnpos, Vector2Scale(initialVelocity, dt));
             newBody.color = newBody.generateRandomColor(colors);
             newBody.radius = 50;
             newBody.mass = newBody.generateRandomMass();
             bodies.push_back(newBody);
+
+            std::cout << "init vel : " << initialVelocity.x << " " << initialVelocity.y << std::endl;
             std::cout << newBody.mass << std::endl;
         }
 
-        // Update and draw all bodies
-        if(bodies.size() >= 2)
-        {
-            for (int i = 0; i < bodies.size(); i++) 
-            {
-                totalKE += 0.5f * bodies[i].mass * Vector2LengthSqr(bodies[i].velocity);
-                for (int j = 0; j < bodies.size(); j++) 
-                {
-                    if (i == j) continue; // skip self
+        if (bodies.size() >= 2) {
+            for (int i = 0; i < bodies.size(); i++) {
+                Vector2 totalAcc = {0};
+
+                for (int j = 0; j < bodies.size(); j++) {
+                    if (i == j) continue;
                     Vector2 acc = bodies[i].GetAccelerationFrom(bodies[j]);
-                    bodies[i].velocity = Vector2Add(bodies[i].velocity, acc);
-                    std::cout << bodies[i].computeEnergy() << std::endl;
+                    totalAcc = Vector2Add(totalAcc, acc);
+
                     float dist = Vector2Distance(bodies[i].position, bodies[j].position);
                     totalPE += -bodies[i].G * bodies[i].mass * bodies[j].mass / dist;
                 }
+
+                totalKE += 0.5f * bodies[i].mass * Vector2LengthSqr(Vector2Scale(Vector2Subtract(bodies[i].position, bodies[i].prevPosition), 1.0f / dt));
+                bodies[i].VerletUpdate(totalAcc, dt);
             }
         }
 
-        for(auto& b : bodies) 
-        {
-            b.Update();
+        for (auto& b : bodies) {
             b.Draw();
         }
 
-        DrawText(TextFormat("FPS: %i", GetFPS()), 10, 10, 20, DARKGRAY);
-        DrawText(TextFormat("Energy: KE=%.2f PE=%.2f", totalKE, totalPE), 10, 50, 20, DARKGRAY);
         EndDrawing();
     }
 
