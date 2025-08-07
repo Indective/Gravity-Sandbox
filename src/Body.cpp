@@ -12,14 +12,14 @@ void Body::Draw()
 
 void Body::Update()
 {
-    position = Vector2Add(position, velocity);
+    position = Vector2Add(position, Vector2Scale(velocity,GetFrameTime()));
 }
 
-int Body::generateRandomRadius()
+int Body::generateRandomMass()
 {
-    std::random_device rd; 
-    std::mt19937 gen(rd()); 
-    std::uniform_int_distribution<> distrib(10, 180);
+    std::random_device rd_device; 
+    std::mt19937 gen(rd_device()); 
+    std::uniform_int_distribution<> distrib(20,600);
     int rand = distrib(gen);
 
     return rand;
@@ -41,8 +41,8 @@ Vector2 Body::GetAccelerationFrom(const Body &bodyB)
     Vector2 dir = Vector2Subtract(bodyB.position, position);
     float r2 = Vector2LengthSqr(dir);
     Vector2 dirNorm = Vector2Normalize(dir);
-    float forceMag = (9.8 * radius * bodyB.radius) / r2;
+    float forceMag = (G * mass * bodyB.mass) / r2;
     Vector2 force = Vector2Scale(dirNorm, forceMag);
-    Vector2 acceleration = Vector2Scale(force, 1.0f / radius);
+    Vector2 acceleration = Vector2Scale(force, (1.0f / mass));
     return acceleration;
 }

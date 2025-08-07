@@ -46,20 +46,23 @@ int main()
             newBody.velocity = initialVelocity;
             std::cout << "init vel : " << initialVelocity.x << " " << initialVelocity.y << std::endl;
             newBody.color = newBody.generateRandomColor(colors);
-            newBody.radius = newBody.generateRandomRadius();
+            newBody.radius = 50;
+            newBody.mass = newBody.generateRandomMass();
             bodies.push_back(newBody);
+            std::cout << newBody.mass << std::endl;
         }
 
         // Update and draw all bodies
         if(bodies.size() >= 2)
         {
-            for(int i = 0; i < bodies.size() - 1; i++)
+            for (int i = 0; i < bodies.size(); i++) 
             {
-                Body &bodyA = bodies.at(i);
-                Body &bodyB = bodies.at(i + 1);
-                Vector2 acc = bodyA.GetAccelerationFrom(bodyB);
-                bodyA.velocity = Vector2Add(bodyA.velocity, acc);
-                std::cout << "body a velocity : " << bodyA.velocity.x << " " << bodyA.velocity.y << std::endl;
+                for (int j = 0; j < bodies.size(); j++) 
+                {
+                    if (i == j) continue; // skip self
+                    Vector2 acc = bodies[i].GetAccelerationFrom(bodies[j]);
+                    bodies[i].velocity = Vector2Add(bodies[i].velocity, acc);
+                }
             }
         }
 
