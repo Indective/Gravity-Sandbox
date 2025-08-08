@@ -1,4 +1,3 @@
-// main.cpp
 #include "raylib.h"
 #include "raymath.h"
 #include "Body.hpp"
@@ -7,8 +6,8 @@
 
 int main()
 {
-    const int screenWidth = 1500;
-    const int screenHeight = 750;
+    const int screenWidth = 2000;
+    const int screenHeight = 1250;
     InitWindow(screenWidth, screenHeight, "Simulator");
 
     Vector2 spawnpos = {0};
@@ -17,6 +16,7 @@ int main()
     bool gotmousepos = false;
     float totalKE = 0.0f;
     float totalPE = 0.0f;
+    Vector2 totalAcc;
 
     std::vector<Body> bodies;
     std::vector<Color> colors = {BLUE, RED, PURPLE, GREEN, YELLOW, PINK};
@@ -31,20 +31,21 @@ int main()
 
         BeginDrawing();
         ClearBackground(RAYWHITE);
-        DrawText(TextFormat("FPS: %i", GetFPS()), 10, 10, 20, DARKGRAY);
-        DrawText(TextFormat("Energy: KE=%.2f PE=%.2f", totalKE, totalPE), 10, 50, 20, DARKGRAY);
 
-        if (IsMouseButtonPressed(MOUSE_LEFT_BUTTON)) {
+        if (IsMouseButtonPressed(MOUSE_LEFT_BUTTON)) 
+        {
             spawnpos = GetMousePosition();
             gotmousepos = true;
         }
 
-        if (IsMouseButtonDown(MOUSE_LEFT_BUTTON) && gotmousepos) {
+        if (IsMouseButtonDown(MOUSE_LEFT_BUTTON) && gotmousepos) 
+        {
             endpos = GetMousePosition();
             DrawLineV(spawnpos, endpos, BLACK);
         }
 
-        if (IsMouseButtonReleased(MOUSE_LEFT_BUTTON) && gotmousepos) {
+        if (IsMouseButtonReleased(MOUSE_LEFT_BUTTON) && gotmousepos) 
+        {
             gotmousepos = false;
             Vector2 dragvector = Vector2Subtract(endpos, spawnpos);
             Vector2 initialVelocity = Vector2Scale(dragvector, velocityfactor);
@@ -55,19 +56,28 @@ int main()
             newBody.prevPosition = Vector2Subtract(spawnpos, Vector2Scale(initialVelocity, dt));
             newBody.color = newBody.generateRandomColor(colors);
             newBody.radius = 50;
-            newBody.mass = newBody.generateRandomMass();
+            newBody.mass =  newBody.generateRandomMass();
             bodies.push_back(newBody);
 
             std::cout << "init vel : " << initialVelocity.x << " " << initialVelocity.y << std::endl;
             std::cout << newBody.mass << std::endl;
         }
 
-        if (bodies.size() >= 2) {
-            for (int i = 0; i < bodies.size(); i++) {
-                Vector2 totalAcc = {0};
+        if (bodies.size() >= 2) 
+        {
+            for (int i = bodies.size() - 1; i >= 0; --i) 
+            {
+                totalAcc = {0};
+                for (int j = bodies.size() - 1; j >= 0; --j) 
+                {
+                    if (i == j) continue; // skip self
 
-                for (int j = 0; j < bodies.size(); j++) {
-                    if (i == j) continue;
+                    if (bodies[i].collisionDetect(bodies[j])) 
+                    {
+                        bodies[i].mergeBodies(bodies[j], bodies, colors, j, i);
+                        break; // Exit inner loop after merge
+                    }
+
                     Vector2 acc = bodies[i].GetAccelerationFrom(bodies[j]);
                     totalAcc = Vector2Add(totalAcc, acc);
 
@@ -75,15 +85,25 @@ int main()
                     totalPE += -bodies[i].G * bodies[i].mass * bodies[j].mass / dist;
                 }
 
+                if (i >= bodies.size()) continue; // Safety after erase
                 totalKE += 0.5f * bodies[i].mass * Vector2LengthSqr(Vector2Scale(Vector2Subtract(bodies[i].position, bodies[i].prevPosition), 1.0f / dt));
                 bodies[i].VerletUpdate(totalAcc, dt);
             }
         }
-
-        for (auto& b : bodies) {
-            b.Draw();
+        else if (bodies.size() == 1)
+        {
+            bodies[0].VerletUpdate(totalAcc, dt);
+            totalKE += 0.5f * bodies[0].mass * Vector2LengthSqr(Vector2Scale(Vector2Subtract(bodies[0].position, bodies[0].prevPosition), 1.0f / dt));
         }
 
+        for (auto& b : bodies) 
+        {
+            b.Draw();
+            
+        }
+
+        DrawText(TextFormat("FPS: %i", GetFPS()), 10, 10, 20, DARKGRAY);
+        DrawText(TextFormat("Energy: KE=%.2f PE=%.2f", totalKE, totalPE), 10, 50, 20, DARKGRAY);
         EndDrawing();
     }
 

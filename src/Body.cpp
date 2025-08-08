@@ -34,7 +34,7 @@ int Body::generateRandomMass()
     return distrib(gen);
 }
 
-Color Body::generateRandomColor(const std::vector<Color> colors)
+Color Body::generateRandomColor(const std::vector<Color> &colors)
 {
     std::random_device rd;
     std::mt19937 gen(rd());
@@ -45,4 +45,46 @@ Color Body::generateRandomColor(const std::vector<Color> colors)
 float Body::computeEnergy()
 {
     return 0.5f * mass * Vector2LengthSqr(velocity);
+}
+
+bool Body::collisionDetect(const Body &BodyB)
+{
+    float dist = Vector2Distance(BodyB.position, position);
+    return dist < BodyB.radius + radius;
+}
+
+void Body::mergeBodies(Body &BodyB, std::vector<Body> &bodies, const std::vector<Color> &colors, const int bodyBindex, const int bodyAindex)
+{
+    //calculate merged velocity
+    Vector2 vel = Vector2Add(Vector2Scale(velocity ,mass), Vector2Scale(BodyB.velocity, BodyB.mass));
+    float combinedMass = mass + BodyB.mass;
+    Vector2 mergedVelocity = Vector2Scale(vel, 1.0f / mass);
+    std::cout << "merged velocity : " << mergedVelocity.x << " " << mergedVelocity.y << std::endl;
+    std::cout << "body velocity : " << velocity.x << " " << velocity.y << std::endl;
+
+    //calculate merged position
+    Vector2 pos = Vector2Add(Vector2Scale(position ,mass), Vector2Scale(BodyB.position, BodyB.mass));
+    Vector2 mergedPosition = Vector2Scale(pos, 1.0f / combinedMass);
+    std::cout << "position : " << mergedPosition.x << " " << mergedPosition.y << std::endl;
+    std::cout << "body position : " << position.x << " "  << position.y << std::endl;
+
+
+    Body newBody;
+    newBody.mass = BodyB.mass + mass;
+    newBody.radius = radius + BodyB.radius / 2; 
+    newBody.position = position;
+    newBody.color = MAROON;
+    newBody.velocity = mergedVelocity;
+    newBody.prevPosition = prevPosition;
+
+    bodies.push_back(newBody);
+    newBody.Draw();
+    if (bodyAindex > bodyBindex) {
+        bodies.erase(bodies.begin() + bodyAindex);
+        bodies.erase(bodies.begin() + bodyBindex);
+    } else {
+        bodies.erase(bodies.begin() + bodyBindex);
+        bodies.erase(bodies.begin() + bodyAindex);
+    }
+
 }

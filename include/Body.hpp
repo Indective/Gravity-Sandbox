@@ -15,13 +15,15 @@ public:
     Color color;
     std::vector<Vector2> positions;
 
-    const float G = 10000.0f;
-    const float epsilon = 50.0f;
+    float G = 10000.0f;
+    float epsilon = 50.0f;
 
     void Draw();
     void VerletUpdate(const Vector2 acceleration, float dt);
-    Vector2 GetAccelerationFrom(const Body& other);
+    Vector2 GetAccelerationFrom(const Body& BodyB);
     int generateRandomMass();
-    Color generateRandomColor(const std::vector<Color> colors);
+    Color generateRandomColor(const std::vector<Color> &colors);
     float computeEnergy();
+    bool collisionDetect(const Body& BodyB);
+    void mergeBodies(Body& BodyB, std::vector<Body> &bodies, const std::vector<Color> &colors, const int bodyBindex, const int bodyAindex);
 };
